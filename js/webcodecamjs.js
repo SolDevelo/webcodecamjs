@@ -70,9 +70,11 @@ var WebCodeCamJS = function(element) {
             contrast: 0,
             threshold: 0,
             sharpness: [],
+            rootPath: '',
+            beepEnabled: true,
             resultFunction: function(res) {
                 console.log(res.format + ": " + res.code);
-            },
+            
             cameraSuccess: function(stream) {
                 console.log('cameraSuccess');
             },
@@ -565,6 +567,7 @@ var WebCodeCamJS = function(element) {
                 if (options.beep) {
                     beepSound = new Audio(options.beep);
                 }
+                beepSound = new Audio(options.beep);
             }
             display.width = w = options.width;
             display.height = h = options.height;
