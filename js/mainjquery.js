@@ -1,5 +1,5 @@
 /*!
- * WebCodeCamJS 1.8.0 javascript Bar-Qr code decoder 
+ * WebCodeCamJQuery 2.1.0 javascript Bar-Qr code decoder 
  * Author: Tóth András
  * Web: http://atandrastoth.co.uk
  * email: atandrastoth@gmail.com
@@ -7,8 +7,8 @@
  */
 (function(undefined) {
     var scannerLaser = $(".scanner-laser"),
-    	imageUrl = $("#image-url"),
-    	decodeLocal = $("#decode-img"),
+        imageUrl = $("#image-url"),
+        decodeLocal = $("#decode-img"),
         play = $("#play"),
         scannedImg = $("#scanned-img"),
         scannedQR = $("#scanned-QR"),
@@ -26,17 +26,21 @@
         sharpness = $("#sharpness"),
         sharpnessValue = $("#sharpness-value"),
         grayscale = $("#grayscale"),
-        grayscaleValue = $("#grayscale-value");
+        grayscaleValue = $("#grayscale-value"),
+        flipVertical = $("#flipVertical"),
+        flipVerticalValue = $("#flipVertical-value"),
+        flipHorizontal = $("#flipHorizontal"),
+        flipHorizontalValue = $("#flipHorizontal-value");
     var args = {
         autoBrightnessValue: 100,
-        resultFunction: function(text, imgSrc) {
+        resultFunction: function(res) {
             [].forEach.call(scannerLaser, function(el) {
                 $(el).fadeOut(300, function() {
                     $(el).fadeIn(300);
                 });
             });
-            scannedImg.attr('src', imgSrc);
-            scannedQR.text(text);
+            scannedImg.attr("src", res.imgData);
+            scannedQR.text(res.format + ": " + res.code);
         },
         getDevicesError: function(error) {
             var p, message = "Error detected with the following parameters:\n";
@@ -54,17 +58,24 @@
         },
         cameraError: function(error) {
             var p, message = "Error detected with the following parameters:\n";
-            for (p in error) {
-                message += (p + ": " + error[p] + "\n");
+            if (error.name == "NotSupportedError") {
+                var ans = confirm("Your browser does not support getUserMedia via HTTP!\n(see: https://goo.gl/Y0ZkNV).\n You want to see github demo page in a new window?");
+                if (ans) {
+                    window.open("https://andrastoth.github.io/webcodecamjs/");
+                }
+            } else {
+                for (p in error) {
+                    message += p + ": " + error[p] + "\n";
+                }
+                alert(message);
             }
-            alert(message);
         },
         cameraSuccess: function() {
             grabImg.removeClass("disabled");
         }
     };
     var decoder = $("#webcodecam-canvas").WebCodeCamJQuery(args).data().plugin_WebCodeCamJQuery;
-    decoder.buildSelectMenu("#camera-select").init();
+    decoder.buildSelectMenu("#camera-select", "environment|back").init();
     decodeLocal.on("click", function() {
         Page.decodeLocalImage();
     });
@@ -140,6 +151,30 @@
             }
         }
     };
+    Page.changeVertical = function() {
+        if (decoder.isInitialized()) {
+            var value = flipVertical.prop("checked");
+            if (value) {
+                flipVerticalValue.text(flipVerticalValue.text().split(":")[0] + ": on");
+                decoder.options.flipVertical = value;
+            } else {
+                flipVerticalValue.text(flipVerticalValue.text().split(":")[0] + ": off");
+                decoder.options.flipVertical = value;
+            }
+        }
+    };
+    Page.changeHorizontal = function() {
+        if (decoder.isInitialized()) {
+            var value = flipHorizontal.prop("checked");
+            if (value) {
+                flipHorizontalValue.text(flipHorizontalValue.text().split(":")[0] + ": on");
+                decoder.options.flipHorizontal = value;
+            } else {
+                flipHorizontalValue.text(flipHorizontalValue.text().split(":")[0] + ": off");
+                decoder.options.flipHorizontal = value;
+            }
+        }
+    };
     Page.decodeLocalImage = function() {
         if (decoder.isInitialized()) {
             decoder.decodeLocalImage(imageUrl.val());
@@ -158,7 +193,7 @@
             clearInterval(getZomm);
         }
     }, 500);
-    $('#camera-select').on('change', function() {
+    $("#camera-select").on("change", function() {
         if (decoder.isInitialized()) {
             decoder.stop().play();
         }

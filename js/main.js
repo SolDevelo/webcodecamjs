@@ -1,21 +1,23 @@
 /*!
- * WebCodeCamJS 1.8.0 javascript Bar-Qr code decoder 
+ * WebCodeCamJS 2.1.0 javascript Bar code and QR code decoder 
  * Author: Tóth András
  * Web: http://atandrastoth.co.uk
  * email: atandrastoth@gmail.com
  * Licensed under the MIT license
  */
 (function(undefined) {
+    "use strict";
+
     function Q(el) {
-        if (typeof el === 'string') {
+        if (typeof el === "string") {
             var els = document.querySelectorAll(el);
-            return typeof els === 'undefined' ? undefined : els.length > 1 ? els : els[0];
+            return typeof els === "undefined" ? undefined : els.length > 1 ? els : els[0];
         }
         return el;
     }
     var txt = "innerText" in HTMLElement.prototype ? "innerText" : "textContent";
     var scannerLaser = Q(".scanner-laser"),
-        imageUrl = Q("#image-url");
+        imageUrl = new Q("#image-url"),
         play = Q("#play"),
         scannedImg = Q("#scanned-img"),
         scannedQR = Q("#scanned-QR"),
@@ -34,18 +36,22 @@
         sharpness = Q("#sharpness"),
         sharpnessValue = Q("#sharpness-value"),
         grayscale = Q("#grayscale"),
-        grayscaleValue = Q("#grayscale-value");
+        grayscaleValue = Q("#grayscale-value"),
+        flipVertical = Q("#flipVertical"),
+        flipVerticalValue = Q("#flipVertical-value"),
+        flipHorizontal = Q("#flipHorizontal"),
+        flipHorizontalValue = Q("#flipHorizontal-value");
     var args = {
         autoBrightnessValue: 100,
-        resultFunction: function(text, imgSrc) {
+        resultFunction: function(res) {
             [].forEach.call(scannerLaser, function(el) {
-                fadeOut(el, .5);
+                fadeOut(el, 0.5);
                 setTimeout(function() {
-                    fadeIn(el, .5);
+                    fadeIn(el, 0.5);
                 }, 300);
             });
-            scannedImg.src = imgSrc;
-            scannedQR[txt] = text;
+            scannedImg.src = res.imgData;
+            scannedQR[txt] = res.format + ": " + res.code;
         },
         getDevicesError: function(error) {
             var p, message = "Error detected with the following parameters:\n";
@@ -63,17 +69,23 @@
         },
         cameraError: function(error) {
             var p, message = "Error detected with the following parameters:\n";
-            for (p in error) {
-                message += p + ": " + error[p] + "\n";
+            if (error.name == "NotSupportedError") {
+                var ans = confirm("Your browser does not support getUserMedia via HTTP!\n(see: https:goo.gl/Y0ZkNV).\n You want to see github demo page in a new window?");
+                if (ans) {
+                    window.open("https://andrastoth.github.io/webcodecamjs/");
+                }
+            } else {
+                for (p in error) {
+                    message += p + ": " + error[p] + "\n";
+                }
+                alert(message);
             }
-            alert(message);
         },
         cameraSuccess: function() {
             grabImg.classList.remove("disabled");
         }
     };
-    var decoder = new WebCodeCamJS("#webcodecam-canvas");
-    decoder.buildSelectMenu("#camera-select").init(args);
+    var decoder = new WebCodeCamJS("#webcodecam-canvas").buildSelectMenu("#camera-select", "environment|back").init(args);
     decodeLocal.addEventListener("click", function() {
         Page.decodeLocalImage();
     }, false);
@@ -134,7 +146,7 @@
     };
     Page.changeSharpness = function() {
         if (decoder.isInitialized()) {
-            var value = sharpness["checked"];
+            var value = sharpness.checked;
             if (value) {
                 sharpnessValue[txt] = sharpnessValue[txt].split(":")[0] + ": on";
                 decoder.options.sharpness = [0, -1, 0, -1, 5, -1, 0, -1, 0];
@@ -144,9 +156,33 @@
             }
         }
     };
+    Page.changeVertical = function() {
+        if (decoder.isInitialized()) {
+            var value = flipVertical.checked;
+            if (value) {
+                flipVerticalValue[txt] = flipVerticalValue[txt].split(":")[0] + ": on";
+                decoder.options.flipVertical = value;
+            } else {
+                flipVerticalValue[txt] = flipVerticalValue[txt].split(":")[0] + ": off";
+                decoder.options.flipVertical = value;
+            }
+        }
+    };
+    Page.changeHorizontal = function() {
+        if (decoder.isInitialized()) {
+            var value = flipHorizontal.checked;
+            if (value) {
+                flipHorizontalValue[txt] = flipHorizontalValue[txt].split(":")[0] + ": on";
+                decoder.options.flipHorizontal = value;
+            } else {
+                flipHorizontalValue[txt] = flipHorizontalValue[txt].split(":")[0] + ": off";
+                decoder.options.flipHorizontal = value;
+            }
+        }
+    };
     Page.changeGrayscale = function() {
         if (decoder.isInitialized()) {
-            var value = grayscale["checked"];
+            var value = grayscale.checked;
             if (value) {
                 grayscaleValue[txt] = grayscaleValue[txt].split(":")[0] + ": on";
                 decoder.options.grayScale = true;
@@ -178,7 +214,7 @@
     function fadeOut(el, v) {
         el.style.opacity = 1;
         (function fade() {
-            if ((el.style.opacity -= .1) < v) {
+            if ((el.style.opacity -= 0.1) < v) {
                 el.style.display = "none";
                 el.classList.add("is-hidden");
             } else {
@@ -195,13 +231,13 @@
         el.style.display = display || "block";
         (function fade() {
             var val = parseFloat(el.style.opacity);
-            if (!((val += .1) > v)) {
+            if (!((val += 0.1) > v)) {
                 el.style.opacity = val;
                 requestAnimationFrame(fade);
             }
         })();
     }
-    document.querySelector('#camera-select').addEventListener('change', function() {
+    document.querySelector("#camera-select").addEventListener("change", function() {
         if (decoder.isInitialized()) {
             decoder.stop().play();
         }
