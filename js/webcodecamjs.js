@@ -70,6 +70,8 @@ var WebCodeCamJS = function(element) {
             contrast: 0,
             threshold: 0,
             sharpness: [],
+            rootPath: '',
+            beepEnabled: true,
             resultFunction: function(res) {
                 console.log(res.format + ": " + res.code);
             },
@@ -563,7 +565,7 @@ var WebCodeCamJS = function(element) {
             if (opt) {
                 options = mergeRecursive(options, opt);
                 if (options.beep) {
-                    beepSound = new Audio(options.beep);
+                    beepSound = new Audio(options.rootPath + options.beep);
                 }
             }
             display.width = w = options.width;
@@ -571,7 +573,7 @@ var WebCodeCamJS = function(element) {
             qrcode.sourceCanvas = display;
             initialized = true;
             setEventListeners();
-            DecodeWorker = new Worker(options.decoderWorker);
+            DecodeWorker = new Worker(options.rootPath + options.decoderWorker);
             if (options.decodeQRCodeRate || options.decodeBarCodeRate) {
                 setCallBack();
             }
